@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+source $(dirname $0)/../etc/profile
+
+format="%-18s : %s"
+
+printf "${format}\n" "age" "$(age --version 2>/dev/null)"
+printf "${format}\n" "jq" "$(jq --version 2>/dev/null)"
+printf "${format}\n" "tanzu" "$(tanzu version 2>/dev/null | grep '^version:' | awk '{print $2}')"
+printf "${format}\n" "tanzu apps plugin" "$(tanzu apps version)"
+printf "${format}\n" "sops" "$(sops --version 2>/dev/null | awk '{print $2}')"

@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname $0)/../etc/profile
+
+cluster=$TAP_CLUSTER
+commit=false
+overwrite=false
+prog=$(basename $0)
+
+usage() {
+  cat << EOF
+USAGE
+      $prog [-goh] cluster
+WHERE
+      cluster   cluster name
+OPTIONS
+      -g        commit changes to Git
+      -o        overwrite existing setup
+      -h        print this message
+NOTES
+      $(b cluster) can be omitted if $(b TAP_CLUSTER) is defined.
+EOF
+}
+
+while getopts ":goh" opt ; do
+  case $opt in
+    g)
+      commit=true
+      ;;
+    o)
+      overwrite=true
+      ;;
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      die "invalid option -$OPTARGr; run with -h for help"
+      ;;
+    :)
+      die "option -$OPTARG requires an argument; run with -h for help"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [[ $# > 0 ]] ; then
+  cluster=$1
+  shift
+fi
+
+if [[ $# > 0 ]] ; then
+  die "too many args; run with -h for help"
+fi
+
+if [[ -z $cluster ]] ; then
+  die "cluster not specified; run with -h for help"
+fi
+
+key_file=$KEY_DIR/$cluster.age
+if [[ ! -f $key_file ]] ; then
+  die "key does not exist for TAP $cluster; run key-gen"
+fi
+
+if ! $overwrite ; then
+  [[ -d $CLUSTER_DIR/$cluster ]] && die "TAP $cluster already exists; run with -o to replace"
+fi
+
+rm -rf $CLUSTER_DIR/$cluster
+
+info "setting up TAP $cluster"
+cd $BASE_DIR
+$LIBEXEC_DIR/setup-repo.sh $cluster sops
+
+if $commit ; then
+  info "committing TAP $cluster"
+  git add $CLUSTER_DIR/$cluster
+  git commit -m "$cluster: setup"
+fi
+
+info "adding configuration stubs"
+cp -r $DATA_DIR/templates/. $CLUSTER_DIR/$cluster/
+cd $CLUSTER_DIR/$cluster
+./tanzu-sync/scripts/configure.sh

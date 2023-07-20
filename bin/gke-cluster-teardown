@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname $0)/../etc/profile
+
+cluster=$TAP_CLUSTER
+prog=$(basename $0)
+prompt=true
+
+usage() {
+  cat << EOF
+USAGE
+      $prog [-hy] $(b cluster)
+WHERE
+      cluster   cluster name
+OPTIONS
+      -y        do not prompt for confirmation
+      -h        print this message
+NOTES
+      $(b cluster) can be omitted if $(b TAP_CLUSTER) is defined.
+EOF
+}
+
+while getopts ":hy" opt ; do
+  case $opt in
+    y)
+      prompt=false
+      ;;
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      die "invalid option -$OPTARGr; run with -h for help"
+      ;;
+    :)
+      die "option -$OPTARG requires an argument; run with -h for help"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [[ $# > 0 ]] ; then
+  cluster=$1
+  shift
+fi
+
+if [[ $# > 0 ]] ; then
+  die "too many args; run with -h for help"
+fi
+
+if [[ -z "$cluster" ]] ; then
+  die "GKE cluster not specified; run with -h for help"
+fi
+
+if $prompt ; then
+  echo -n "Tear down GKE cluster $cluster? [yN] "
+  read response
+  response=${response^^}
+  [[ "$response" == "Y" ]] || [[ "$response" == "YES" ]] || exit
+fi
+
+info " tearing down GKE cluster $cluster"
+gcloud container clusters delete $cluster --zone $GKE_ZONE --quiet

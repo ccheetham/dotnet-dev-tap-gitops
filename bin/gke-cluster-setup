@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname $0)/../etc/profile
+
+prog=$(basename $0)
+cluster=$TAP_CLUSTER
+prompt=true
+
+usage() {
+  cat << EOF
+USAGE
+      $prog [-yh] cluster
+WHERE
+      cluster   cluster name
+OPTIONS
+      -y        do not prompt for confirmation
+      -h        print this message
+NOTES
+      $(b cluster) can be omitted if $(b TAP_CLUSTER) is defined.
+EOF
+}
+
+while getopts ":hy" opt ; do
+  case $opt in
+    y)
+      prompt=false
+      ;;
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      die "invalid option -$OPTARGr; run with -h for help"
+      ;;
+    :)
+      die "option -$OPTARG requires an argument; run with -h for help"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [[ $# > 0 ]] ; then
+  cluster=$1
+  shift
+fi
+
+if [[ $# > 0 ]] ; then
+  die "too many args; run with -h for help"
+fi
+
+if [[ -z "$cluster" ]] ; then
+  die "GKE cluster not specified; run with -h for help"
+fi
+
+if $prompt ; then
+  echo -n "Set up GKE cluster $cluster? [yN] "
+  read response
+  response=${response^^}
+  [[ "$response" == "Y" ]] || [[ "$response" == "YES" ]] || exit
+fi
+
+info "setting up GKE cluster $cluster"
+gcloud container clusters create "$cluster" \
+  --project "$GKE_PROJECT" \
+  --cluster-version "$GKE_CLUSTER_VERSION" \
+  --zone "$GKE_ZONE" \
+  --no-enable-basic-auth \
+  --release-channel "regular" \
+  --machine-type "$GKE_MACHINE_TYPE" \
+  --image-type "COS_CONTAINERD" \
+  --disk-type "$GKE_DISK_TYPE" \
+  --disk-size "$GKE_DISK_SIZE" \
+  --metadata disable-legacy-endpoints=true \
+  --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
+  --max-pods-per-node "$GKE_MAX_PODS_PER_NODE" \
+  --default-max-pods-per-node "$GKE_DEFAULT_MAX_PODS_PER_NODE" \
+  --num-nodes "$GKE_NUM_NODES" \
+  --logging=SYSTEM,WORKLOAD \
+  --monitoring=SYSTEM \
+  --enable-ip-alias \
+  --network "projects/$GKE_PROJECT/global/networks/default" \
+  --subnetwork "projects/$GKE_PROJECT/regions/$GKE_REGION/subnetworks/default" \
+  --no-enable-intra-node-visibility \
+  --no-enable-master-authorized-networks \
+  --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver \
+  --enable-autoupgrade \
+  --enable-autorepair \
+  --max-surge-upgrade 1 \
+  --max-unavailable-upgrade 0 \
+  --enable-shielded-nodes \
+  --node-locations "$GKE_ZONE"
+
+context=$(kubectl config current-context)
+if [[ ! $context == $cluster ]] ; then
+  info "renaming context: $context -> $cluster"
+  kubectl config rename-context $context $cluster
+fi

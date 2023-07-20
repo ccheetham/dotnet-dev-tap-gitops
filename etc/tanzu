@@ -1,0 +1,6 @@
+TGO_VERSION=0.2.5
+TCE_VERSION=1.6.0
+
+TAP_NAMESPACE=tap-install
+
+# vim: ft=bash

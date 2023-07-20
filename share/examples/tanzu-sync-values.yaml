@@ -1,0 +1,17 @@
+---
+secrets:
+  sops:
+    age_key: |
+      AGE-SECRET-KEY-...........................................................
+    registry:
+      hostname: "registry.tanzu.vmware.com"
+      username: "user@vmware.com"
+      password: "............"
+    git:
+      ssh:
+        private_key: |
+          -----BEGIN OPENSSH PRIVATE KEY-----
+          ......................................................................
+          -----END OPENSSH PRIVATE KEY-----
+        known_hosts: |
+          github.com ssh-rsa .................................................

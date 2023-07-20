@@ -1,0 +1,73 @@
+# --- logging -----------------------------------------------------------------
+
+info() {
+  tput setaf 2
+  echo "--- $*"
+  tput sgr0
+}
+
+warn() {
+  tput setaf 208
+  echo "--- $*" >&2
+  tput sgr0
+}
+
+error() {
+  tput setaf 1
+  echo "!!! $*" >&2
+  tput sgr0
+}
+
+die() {
+  [ $# -gt 0 ] && error "$*"
+  exit 1
+}
+
+# --- formatting --------------------------------------------------------------
+
+# bold
+b() {
+  tput bold
+  printf "%s" "$*"
+  tput sgr0
+}
+
+# underline
+u() {
+  tput smul
+  printf "%s" "$*"
+  tput rmul
+}
+
+# standout
+s() {
+  tput smso
+  printf "%s" "$*"
+  tput rmso
+}
+
+# uppercase
+U() {
+  echo "$*" | awk '{print toupper($0)}'
+}
+
+# code
+c() {
+  tput bold
+  printf "%s" "$*"
+  tput sgr0
+}
+
+# --- utilities ---------------------------------------------------------------
+
+load_keys() {
+  local cluster=$1
+  local key_file=$KEY_DIR/$cluster.age
+  if [[ ! -f $key_file ]] ; then
+    die "key does not exist for TAP $cluster; run key-gen"
+  fi
+  export SOPS_AGE_RECIPIENTS=$(cat $key_file | grep "# public key: " | sed 's/# public key: //')
+  export SOPS_AGE_KEY=$(cat $key_file)
+}
+
+# vim: ft=sh

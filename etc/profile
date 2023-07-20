@@ -1,0 +1,16 @@
+BASE_DIR=$(cd $(dirname $0)/.. && pwd)
+CONFIG_DIR=$BASE_DIR/etc
+LIB_DIR=$BASE_DIR/lib
+LIBEXEC_DIR=$BASE_DIR/libexec
+DATA_DIR=$BASE_DIR/share
+LOCAL_DIR=$BASE_DIR/local
+CLUSTER_DIR=$BASE_DIR/clusters
+KEY_DIR=$BASE_DIR/keys
+SENSITIVE_DIR=$BASE_DIR/sensitive
+
+source $CONFIG_DIR/tanzu
+source $CONFIG_DIR/gke
+source $LIB_DIR/functions
+[[ -f $CONFIG_DIR/local ]] && source $CONFIG_DIR/local
+
+# vim: ft=bash

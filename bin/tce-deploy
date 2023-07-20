@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname $0)/../etc/profile
+
+prog=$(basename $0)
+prompt=true
+
+usage() {
+  cat << EOF
+USAGE
+      $prog [-h]
+OPTIONS
+      -y        do not prompt for confirmation
+      -h        print this message
+EOF
+}
+
+while getopts ":yh" opt ; do
+  case $opt in
+    y)
+      prompt=false
+      ;;
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      die "invalid option -$OPTARGr; run with -h for help"
+      ;;
+    :)
+      die "option -$OPTARG requires an argument; run with -h for help"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [[ $# > 0 ]] ; then
+  die "too many args; run with -h for help"
+fi
+
+tce_dist=tanzu-cluster-essentials-darwin-amd64-$TCE_VERSION
+tce_distfile=$LOCAL_DIR/var/$tce_dist.tgz
+tce_dir=$LOCAL_DIR/opt/$tce_dist
+if [[ ! -d $tce_dir ]] ; then
+  if [[ ! -f $tce_distfile ]] ; then
+    error "$tce_dist not found"
+    error
+    error "download $(basename $tce_distfile) from https://network.pivotal.io/products/tanzu-cluster-essentials/"
+    error "place downloaded file in $(basename $LOCAL_DIR)/var directory"
+    die
+  fi
+  mkdir -p $tce_dir
+  tar xf $tce_distfile -C $tce_dir
+fi
+
+if $prompt ; then
+  echo -n "Deploy Tanzu Cluster Essentials? [yN] "
+  read response
+  response=${response^^}
+  [[ "$response" == "Y" ]] || [[ "$response" == "YES" ]] || exit
+fi
+
+info "deploying Tanzu Cluster Essentials $TCE_VERSION"
+cd $tce_dir
+./install.sh --yes

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname $0)/../etc/profile
+
+prog=$(basename $0)
+
+usage() {
+  cat << EOF
+USAGE
+      $prog [-h]
+OPTIONS
+      -h        print this message
+EOF
+}
+
+while getopts ":h" opt ; do
+  case $opt in
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      die "invalid option -$OPTARGr; run with -h for help"
+      ;;
+    :)
+      die "option -$OPTARG requires an argument; run with -h for help"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [[ $# > 0 ]] ; then
+  die "too many args; run with -h for help"
+fi
+
+gitops_dist=tanzu-gitops-ri-$TGO_VERSION
+gitops_distfile=$LOCAL_DIR/var/$gitops_dist.tgz
+gitops_dir=$BASE_DIR
+
+if [[ ! -f $gitops_distfile ]] ; then
+  error "$gitops_dist not found"
+  error
+  error "download $(basename $gitops_distfile) from https://network.pivotal.io/products/tanzu-application-platform/releases"
+  error "place downloaded file in $(basename $LOCAL_DIR)/var directory"
+  die
+fi
+
+info "installing Tanzu GitOps RI $TGO_VERSION"
+tar xf $gitops_distfile --exclude README.md -C $gitops_dir
+mv setup-repo.sh $LIBEXEC_DIR

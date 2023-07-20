@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname $0)/../etc/profile
+
+prog=$(basename $0)
+
+usage() {
+  cat << EOF
+USAGE
+      $prog [-h]
+OPTIONS
+      -h        print this message
+EOF
+}
+
+while getopts ":h" opt ; do
+  case $opt in
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      die "invalid option -$OPTARGr; run with -h for help"
+      ;;
+    :)
+      die "option -$OPTARG requires an argument; run with -h for help"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [[ $# > 0 ]] ; then
+  die "too many args; run with -h for help"
+fi
+
+cat << EOF
+To undeploy, check your current context, then run:
+
+    kapp delete --app tanzu-sync
+EOF

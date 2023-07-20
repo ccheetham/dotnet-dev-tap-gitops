@@ -1,0 +1,11 @@
+---
+tap_install:
+  sensitive_values:
+    shared:
+      image_registry:
+        project_path: us-central1-docker.pkg.dev/dotnet-developer-experience/dotnet-experience-containers
+        username: _json_key
+        password: |
+          {
+          ....
+          }

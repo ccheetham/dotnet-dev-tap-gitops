@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+source $(dirname $0)/../etc/profile
+
+kubectl get packageinstall -n $TAP_NAMESPACE

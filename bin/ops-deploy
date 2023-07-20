@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname $0)/../etc/profile
+
+cluster=$TAP_CLUSTER
+prog=$(basename $0)
+prompt=true
+
+usage() {
+  cat << EOF
+USAGE
+      $prog [-yh] cluster
+WHERE
+      cluster   cluster name
+OPTIONS
+      -y        do not prompt for confirmation
+      -h        print this message
+NOTES
+      $(b cluster) can be omitted if $(b TAP_CLUSTER) is defined.
+EOF
+}
+
+while getopts ":yh" opt ; do
+  case $opt in
+    y)
+      prompt=false
+      ;;
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      die "invalid option -$OPTARGr; run with -h for help"
+      ;;
+    :)
+      die "option -$OPTARG requires an argument; run with -h for help"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [[ $# > 0 ]] ; then
+  cluster=$1
+  shift
+fi
+
+if [[ $# > 0 ]] ; then
+  die "too many args; run with -h for help"
+fi
+
+if [[ -z $cluster ]] ; then
+  die "cluster not specified; run with -h for help"
+fi
+
+if $prompt ; then
+  echo -n "Deploy TAP $cluster? [yN] "
+  read response
+  response=${response^^}
+  [[ "$response" == "Y" ]] || [[ "$response" == "YES" ]] || exit
+fi
+
+load_keys $cluster
+
+info "deploying TAP $cluster"
+cd $CLUSTER_DIR/$cluster
+yes | ./tanzu-sync/scripts/deploy.sh

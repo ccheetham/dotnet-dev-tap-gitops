@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname $0)/../etc/profile
+
+cluster=$TAP_CLUSTER
+prog=$(basename $0)
+
+usage() {
+  cat << EOF
+USAGE
+      $prog [-hy] cluster
+WHERE
+      cluster   cluster name
+OPTIONS
+      -h        print this message
+NOTES
+      $(b cluster) can be omitted if $(b TAP_CLUSTER) is defined.
+EOF
+}
+
+while getopts ":h" opt ; do
+  case $opt in
+    h)
+      usage
+      exit
+      ;;
+    \?)
+      die "invalid option -$OPTARG; run with -h for help"
+      ;;
+    :)
+      die "option -$OPTARG requires an argument; run with -h for help"
+      ;;
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [[ $# > 0 ]] ; then
+  cluster=$1
+  shift
+fi
+
+if [[ $# > 0 ]] ; then
+  die "too many args; run with -h for help"
+fi
+
+if [[ -z "$cluster" ]] ; then
+  die "GKE cluster not specified; run with -h for help"
+fi
+
+info "authenticating to GKE cluster $cluster"
+gcloud container clusters get-credentials $cluster \
+  --zone $GKE_ZONE \
+  --project $GKE_PROJECT
