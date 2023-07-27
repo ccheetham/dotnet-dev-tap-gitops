@@ -1,0 +1,2 @@
+cluster-config/values/tap-sensitive-values.yaml
+tanzu-sync/app/sensitive-values/tanzu-sync-values.yaml
