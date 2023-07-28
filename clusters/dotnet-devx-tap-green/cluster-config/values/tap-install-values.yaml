@@ -14,3 +14,10 @@ tap_install:
     - learningcenter.tanzu.vmware.com
     - workshops.learningcenter.tanzu.vmware.com
     - eventing.tanzu.vmware.com
+    namespace_provisioner:
+      controller: false
+      sync_period: 30s
+      gitops_install:
+        url: https://github.com/ccheetham/dotnet-dev-tap-gitops.git
+        ref: origin/main
+        subPath: clusters/dotnet-devx-tap-green/cluster-config/namespace-provisioner/namespaces

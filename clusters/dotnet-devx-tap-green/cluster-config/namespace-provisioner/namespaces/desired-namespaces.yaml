@@ -1,0 +1,8 @@
+#@data/values
+---
+namespaces:
+- name: dev-scratch
+- name: dev-bkoelman
+- name: dev-ccheetham
+- name: dev-hsarella
+- name: dev-thess
